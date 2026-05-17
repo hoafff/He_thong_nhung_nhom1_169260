@@ -1,0 +1,11 @@
+Arduino IDE Library Manager:
+- Adafruit GFX Library
+- Adafruit ILI9341
+- XPT2046_Touchscreen
+- DHT sensor library by Adafruit
+- Adafruit Unified Sensor
+
+Built into ESP32 Arduino core:
+- WiFi.h
+- HTTPClient.h
+- WebServer.h
