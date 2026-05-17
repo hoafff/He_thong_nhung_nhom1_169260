@@ -29,6 +29,7 @@
 #define TB_ACCESS_TOKEN "PUT_YOUR_THINGSBOARD_DEVICE_TOKEN_HERE"
 
 #define ENABLE_MQTT 0
+#define ENABLE_WIFI 0
 
 #define MQTT_CLIENT_ID  "esp32_gateway_air_quality_demo"
 #define TB_TELEMETRY_TOPIC "v1/devices/me/telemetry"
@@ -394,7 +395,6 @@ void printRoomData(room_data_t room)
 }
 
 // ======================= ARDUINO MAIN =======================
-
 void setup(void)
 {
   Serial.begin(SERIAL_BAUDRATE);
@@ -405,41 +405,50 @@ void setup(void)
   Serial.println();
   Serial.println("===========================================");
   Serial.println("Multi-room Air Quality Gateway MVP Demo");
-  Serial.println("ESP32 + Wokwi + MQTT + ThingsBoard");
+  Serial.println("ESP32 + Wokwi Offline Demo");
   Serial.println("===========================================");
 
-  connectWiFi();
+  if (ENABLE_WIFI != 0)
+  {
+    connectWiFi();
+    mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
 
-mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
-
-if (ENABLE_MQTT != 0)
-{
-  connectMQTT();
+    if (ENABLE_MQTT != 0)
+    {
+      connectMQTT();
+    }
+    else
+    {
+      Serial.println("MQTT disabled for offline Wokwi demo.");
+    }
+  }
+  else
+  {
+    Serial.println("WiFi disabled for offline Wokwi demo.");
+    Serial.println("MQTT disabled for offline Wokwi demo.");
+  }
 }
-else
-{
-  Serial.println("MQTT disabled for offline Wokwi demo.");
-}
-}
-
 void loop(void)
 {
-  if (WiFi.status() != WL_CONNECTED)
+  if (ENABLE_WIFI != 0)
   {
-    digitalWrite(LED_WIFI_PIN, LOW);
-    connectWiFi();
-  }
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      digitalWrite(LED_WIFI_PIN, LOW);
+      connectWiFi();
+    }
 
-  if (ENABLE_MQTT != 0)
-{
-  if (!mqttClient.connected())
-  {
-    digitalWrite(LED_MQTT_PIN, LOW);
-    connectMQTT();
-  }
+    if (ENABLE_MQTT != 0)
+    {
+      if (!mqttClient.connected())
+      {
+        digitalWrite(LED_MQTT_PIN, LOW);
+        connectMQTT();
+      }
 
-  mqttClient.loop();
-}
+      mqttClient.loop();
+    }
+  }
 
   unsigned long nowMs = millis();
 
@@ -459,13 +468,13 @@ void loop(void)
     Serial.print("Fan/Relay: ");
     Serial.println(isFanOn(room1, room2) ? "ON" : "OFF");
 
-    if (ENABLE_MQTT != 0)
-{
-  publishTelemetry(room1, room2);
-}
-else
-{
-  Serial.println("Offline demo mode: telemetry only printed to Serial.");
-}
+    if ((ENABLE_WIFI != 0) && (ENABLE_MQTT != 0))
+    {
+      publishTelemetry(room1, room2);
+    }
+    else
+    {
+      Serial.println("Offline demo mode: telemetry only printed to Serial.");
+    }
   }
 }
