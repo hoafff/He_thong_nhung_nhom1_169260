@@ -1,0 +1,2 @@
+# Keep Arduino timing functions stable.
+CONFIG_FREERTOS_HZ=1000
